@@ -12,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/v1", rootRouter)
 
+const PORT = process.env.API_SERVER_PORT || 8080;
+
 async function startServer(){
     try{
         await subClient.connect();
@@ -19,7 +21,7 @@ async function startServer(){
         console.log("Connected to Redis Server");
         await connectToDatabase();
         console.log("Connected to Database");
-        app.listen(8080, () => {
+        app.listen(PORT, () => {
             console.log("Server running on port 8080");
         });
     }

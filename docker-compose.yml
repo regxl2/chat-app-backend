@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  api-server:
+    build: ./api-server
+    container_name: api-server
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: "mongodb://mongodb:27017/kmmDatabase?authSource=admin"
+      GMAIL_USER: "${GMAIL_USER}"
+      GMAIL_PASS: "${GMAIL_PASS}"
+      JWT_SECRET: "${JWT_SECRET}"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+    depends_on:
+      - redis
+      - mongodb
+
+  websocket-server:
+    build: ./websocket-server
+    container_name: websocket-server
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+
+  redis:
+    image: "redis"
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  mongodb:
+    image: "mongo"
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - "mongodb_data:/data/db"
+
+volumes:
+  mongodb_data:

@@ -2,7 +2,6 @@
 
 ## Prerequisites
 - Node.js installed
-- MongoDB database
 - Redis
 
 ## Installation Steps
@@ -20,13 +19,11 @@ npm install
 ### 3. Configure Environment Variables
 Create a `.env` file in the project root with the following contents:
 ```
-DATABASE_URL="YOUR_MONGODB_URL"
-JWT_SECRET=ENTER_YOUR_JWT_SECRET_KEY
+WEBSOCKET_PORT="YOUR_PORT"
 ```
 
 Replace the placeholders with your actual:
-- MongoDB connection URL
-- JWT secret key
+- Port number
 
 ### 4. Build the Project
 Compile TypeScript files:
@@ -40,6 +37,4 @@ node dist/index.js
 ```
 
 ## Configuration Notes
-- Ensure your MongoDB is running and accessible
-- The JWT secret should match the one used in the API server
 - Verify network and firewall settings allow WebSocket connections

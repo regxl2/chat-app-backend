@@ -21,13 +21,15 @@ npm install
 ### 3. Configure Environment Variables
 Create a `.env` file in the project root with the following contents:
 ```
-DATABASE_URL="YOUR_MONGODB_URL"
+API_SERVER_PORT=YOUR_PORT_NUMBER
+DATABASE_URL=YOUR_MONGODB_URL
 GMAIL_USER=ENTER_YOUR_GMAIL_USER
 GMAIL_PASS=ENTER_YOUR_GMAIL_PASS
 JWT_SECRET=ENTER_YOUR_JWT_SECRET_KEY
 ```
 
 Replace the placeholders with your actual:
+- Port number
 - MongoDB connection URL
 - Gmail credentials
 - JWT secret key

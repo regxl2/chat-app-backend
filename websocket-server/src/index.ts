@@ -5,7 +5,7 @@ import {startWebsocketServer} from "./chatController";
 import {pubClient, subClient} from "./redis";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.WEBSOCKET_PORT || 3001;
 
 app.use(cors());
 app.use(express.json());

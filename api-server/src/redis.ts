@@ -1,7 +1,10 @@
 import {createClient} from 'redis';
 import {Chat, Message, RoomChat, User} from './models/dbModels';
 
-export const subClient = createClient();
+const redisUrl = `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`;
+
+export const subClient = createClient({url: redisUrl}); // in case of docker
+// export const subClient = createClient(); if running on locally installed redis
 subClient.on('error', (err) => console.log(err));
 
 const channel = "chat-app";
