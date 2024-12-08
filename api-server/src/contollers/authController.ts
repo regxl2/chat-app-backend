@@ -68,7 +68,7 @@ export const signUpOtpVerification = async (req: express.Request, res: express.R
     }
 }
 
-export const resendOtp = async(req: express.Request, res: express.Response)=>{
+export const resendOtpForSignUp = async(req: express.Request, res: express.Response)=>{
     const {success, error} = emailSchema.safeParse(req.body);
     if(!success){
         res.status(411).json({error: error.errors[0].message});
@@ -159,6 +159,28 @@ export const passResetOtpVerification = async (req: express.Request, res: expres
             return;
         }
         res.status(200).json({message: "Your OTP has been verified"});
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({error: "Something went wrong"});
+    }
+}
+
+export const resendOtpForPassReset = async(req: express.Request, res: express.Response)=>{
+    const {success, error} = emailSchema.safeParse(req.body);
+    if(!success){
+        res.status(411).json({error: error.errors[0].message});
+        return;
+    }
+    try{
+        const {email} = req.body;
+        const user = await User.findOne({email});
+        if(!user || user && !user.isVerified){
+            res.status(411).json({error: "Invalid Request"});
+            return;
+        }
+        const result = await sendOtpForPassReset(email);
+        res.status(200).json(result);
     }
     catch(err){
         console.log(err);
