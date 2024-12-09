@@ -11,6 +11,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+export const authenticate = async (req: express.Request, res: express.Response) => {
+    res.status(200).json({message: "Authentication successful"});
+}
+
 export const signUp = async (req: express.Request, res: express.Response)=> {
     const {success, error} = emailNamePassSchema.safeParse(req.body);
     if (!success) {
@@ -189,7 +193,7 @@ export const resendOtpForPassReset = async(req: express.Request, res: express.Re
 }
 
 export const changePassword = async(req: express.Request, res: express.Response) => {
-    const {success, error} = emailSchema.safeParse(req.body);
+    const {success, error} = emailPassSchema.safeParse(req.body);
     if(!success){
         res.status(411).json({error: error.errors[0].message});
         return;

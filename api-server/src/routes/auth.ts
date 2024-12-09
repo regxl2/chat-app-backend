@@ -4,11 +4,13 @@ import {
     login,
     resendOtpForSignUp,
     passwordResetRequest,
-    passResetOtpVerification, signUpOtpVerification, changePassword, resendOtpForPassReset
+    passResetOtpVerification, signUpOtpVerification, changePassword, resendOtpForPassReset, authenticate
 } from "../contollers/authController";
+import {authMiddleware} from "../middlewares/authMiddleware";
 
 export const authRouter = express.Router();
 
+authRouter.get("/authenticate", authMiddleware, authenticate);
 authRouter.post("/signup", signUp);
 authRouter.post("/verify-signup-otp", signUpOtpVerification);
 authRouter.post("/resend-otp-signup", resendOtpForSignUp);
