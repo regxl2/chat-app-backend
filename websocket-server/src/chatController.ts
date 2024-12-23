@@ -1,5 +1,5 @@
 import WebSocket, {WebSocketServer} from "ws";
-import {pubClient, subClient} from "./redis";
+import {subClient} from "./redis";
 
 const userSocketMap: Map<string, WebSocket> = new Map();
 const channel = "chat-app";
@@ -33,10 +33,6 @@ const subscribeToMessages = async () => {
     });
 }
 
-const publishMessages = async (message: Message) => {
-    await pubClient.publish(channel, JSON.stringify(message));
-}
-
 
 export const startWebsocketServer = async (webSocketServer: WebSocketServer) => {
 
@@ -52,14 +48,6 @@ export const startWebsocketServer = async (webSocketServer: WebSocketServer) => 
 
         userSocketMap.set(userId, socket);
 
-        socket.on("message", (data) => {
-            try {
-                const message = JSON.parse(data.toString()) as Message;
-                publishMessages(message);
-            } catch (err) {
-                console.log(err);
-            }
-        })
         socket.on("close", () => {
             userSocketMap.delete(userId);
         });

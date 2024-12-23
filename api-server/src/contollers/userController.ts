@@ -7,7 +7,7 @@ export const getUserDetails = async(req: express.Request, res: express.Response)
     try{
         const user  = await User.findOne({email});
         if(user){
-            res.status(200).json({id: user._id, email: user.email, name: user.name});
+            res.status(200).json({email: user.email, name: user.name});
         }
         else{
             res.status(411).json({error: "User with this email does not exists"});

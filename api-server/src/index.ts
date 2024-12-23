@@ -3,7 +3,7 @@ import cors from "cors";
 import {rootRouter} from "./routes";
 import dotenv from "dotenv";
 import { connectToDatabase } from "./db";
-import {subClient, subscribeWebSocketMessages} from "./redis"
+import {pubClient} from "./redis"
 
 dotenv.config();
 
@@ -16,8 +16,7 @@ const PORT = process.env.API_SERVER_PORT || 8080;
 
 async function startServer(){
     try{
-        await subClient.connect();
-        subscribeWebSocketMessages();
+        await pubClient.connect();
         console.log("Connected to Redis Server");
         await connectToDatabase();
         console.log("Connected to Database");
