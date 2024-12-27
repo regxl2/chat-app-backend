@@ -8,11 +8,91 @@ interface MessageBody {
     conversationId: string,
     conversationType: string,
     senderId: string,
+    senderName: string,
     content: string,
     contentType: string
 }
 
+interface Message {
+    senderId: string,
+    senderName: string,
+    content: string,
+    contentType: string,
+    createdAt: Date
+}
+
+interface Chat{
+    chatId: string,
+    users: string[],
+    messages: Message[]
+}
+
+interface Room {
+    roomId: string,
+    roomName: string,
+    messages: Message[]
+}
+
+
 const channel = "chat-app";
+
+
+export const getConversations = async (req: express.Request, res: express.Response) => {
+    const {email} = req.body;
+    try {
+        const user = await User.findOne({email}).populate({
+            path: "chatIds",
+            select: ["chatId", "users", "messages"],
+            populate: {
+                path: "messages",
+                options: {limit: 1, sort: {createdAt: -1}}
+            }
+        }).populate({
+            path: "roomIds",
+            select: ["roomId", "roomName", "messages"],
+            populate: {
+                path: "messages",
+                options: {limit: 1, sort: {createdAt: -1}}
+            }
+        });
+
+        if (!user) {
+            res.status(404).json({error: "User not found"});
+            return;
+        }
+        const chatConversations = await Promise.all(
+            user.chatIds.map(async c => {
+                const chat = c as unknown as Chat;
+                const otherUserEmail = chat.users[0] == email ? chat.users[1] : chat.users[0];
+                const otherUser = await User.findOne({email: otherUserEmail});
+                return {
+                    conversationType: "chat",
+                    conversationId: chat.chatId,
+                    name: otherUser?.name,
+                    lastMessage: chat.messages[0]
+                }
+            })
+        );
+        const roomConversations = user.roomIds.map(r => {
+            const room = r as unknown as Room;
+            return {
+                conversationType: "room",
+                conversationId: room.roomId,
+                name: room.roomName,
+                lastMessage: room.messages[0]
+            }
+        });
+
+        const conversations = [
+            ...chatConversations,
+            ...roomConversations
+        ].sort((a, b) => b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime());
+
+        res.status(200).json({conversations});
+    } catch (err) {
+        res.status(500).send({error: "Something is wrong"});
+    }
+}
 
 export const sendMessage = async (req: express.Request, res: express.Response) => {
     const message = req.body as MessageBody;
@@ -22,13 +102,15 @@ export const sendMessage = async (req: express.Request, res: express.Response) =
         return;
     }
     try {
+        const user = await User.findOne({email: message.senderId});
         const dbMessage = await Message.create({
             senderId: message.senderId,
+            senderName: user?.name,
             content: message.content,
             contentType: message.contentType
         });
         let userIds: string[] = [];
-        if (message.conversationType == "chat-message") {
+        if (message.conversationType == "chat") {
             const chats = await Chat.findOne({chatId: message.conversationId});
             if (!chats) {
                 const chatUsers = message.conversationId.split("-");
@@ -51,7 +133,7 @@ export const sendMessage = async (req: express.Request, res: express.Response) =
                 chats.messages.push(dbMessage._id);
                 await chats.save();
             }
-        } else if (message.conversationType == "room-message") {
+        } else if (message.conversationType == "room") {
             const roomChats = await RoomChat.findOne({roomId: message.conversationId});
             if (roomChats) {
                 userIds.push(...roomChats.users);
@@ -69,26 +151,21 @@ export const sendMessage = async (req: express.Request, res: express.Response) =
 }
 
 export const getChatAndRoomChats = async (req: express.Request, res: express.Response) => {
-    const conversationId = req.query.conversationId as string;
-    const email = req.body.email as string;
-    console.log("Conversation ID: ", conversationId);
-    console.log("email: ", email);
+    const {conversationId, conversationType, email} = req.body;
     try {
-        const chats = await Chat.findOne({
-            chatId: conversationId,
-            users: {$elemMatch: {$eq: email}}
-        }).populate("messages");
-        if (chats) {
-            res.status(200).json(chats.messages);
+        if (conversationType == "chat") {
+            const chats = await Chat.findOne({
+                chatId: conversationId,
+                users: {$elemMatch: {$eq: email}}
+            }).populate("messages");
+            res.status(200).json(chats == null ? [] : chats.messages)
             return;
-        }
-        const roomChats = await RoomChat.findOne({
-            roomId: conversationId,
-            users: {$elemMatch: {$eq: email}}
-        }).populate("messages");
-
-        if (roomChats) {
-            res.status(200).json(roomChats.messages);
+        } else if (conversationType == "room") {
+            const roomChats = await RoomChat.findOne({
+                roomId: conversationId,
+                users: {$elemMatch: {$eq: email}}
+            }).populate("messages");
+            res.status(200).json(roomChats == null ? [] : roomChats.messages);
             return;
         }
         res.status(404).json({error: "No chats found"});
@@ -121,15 +198,20 @@ export const createRoomChat = async (req: express.Request, res: express.Response
 }
 
 export const addUserToRoomChat = async (req: express.Request, res: express.Response) => {
-    const {roomId, user, email} = req.body;
+    const {roomId, userId, email} = req.body;
     try {
         const roomChat = await RoomChat.findOne({roomId, users: {$elemMatch: {$eq: email}}});
         if (!roomChat) {
             res.status(400).json({error: "Invalid request"});
             return;
         }
-        roomChat.users.push(user);
+        roomChat.users.push(userId);
         await roomChat.save();
+        const user = await User.findOne({email: userId});
+        if (user) {
+            user.chatIds.push(roomChat._id);
+            await user.save();
+        }
         res.status(200).json({messages: "User added Successfully."});
     } catch (err) {
         console.log(err);
