@@ -12,7 +12,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const authenticate = async (req: express.Request, res: express.Response) => {
-    res.status(200).json({message: "Authentication successful"});
+    const {email} = req.body;
+    res.status(200).json({message: email});
 }
 
 export const signUp = async (req: express.Request, res: express.Response)=> {

@@ -89,8 +89,7 @@ const oneToOneChatSchema = new mongoose.Schema({
     users: [
         {
             type: String,
-            ref: "User",
-            unique: true
+            ref: "User"
         }
     ],
     messages: [
@@ -98,7 +97,11 @@ const oneToOneChatSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "Message"
         }
-    ]
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 const chatRoomSchema = new mongoose.Schema({
@@ -114,8 +117,7 @@ const chatRoomSchema = new mongoose.Schema({
     users: [
         {
             type: String,
-            ref: "User",
-            unique: true
+            ref: "User"
         }
     ],
     messages: [
@@ -123,7 +125,11 @@ const chatRoomSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "Message"
         }
-    ]
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 })
 
 export const User = mongoose.model("User", userSchema);

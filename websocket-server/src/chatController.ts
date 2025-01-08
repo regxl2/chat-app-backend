@@ -4,26 +4,34 @@ import {subClient} from "./redis";
 const userSocketMap: Map<string, WebSocket> = new Map();
 const channel = "chat-app";
 
-interface Message {
-    conversationId: string,
-    conversationType: string,
-    userIds: string[],
+interface Message{
+    _id: string,
     senderId: string,
+    senderName: string,
     content: string,
-    contentType: string
+    contentType: string,
+    createdAt: Date,
+    userIds: string[]
 }
+
 
 const subscribeToMessages = async () => {
     await subClient.subscribe(channel, (data) => {
         try {
             const message = JSON.parse(data) as Message;
-            const {senderId, userIds} = message;
-
+            const userIds = [...new Set(message.userIds)];
             for (const receiverId of userIds) {
-                if (receiverId == senderId) continue;
                 const socket = userSocketMap.get(receiverId);
                 if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify(message));
+                    socket.send(JSON.stringify({
+                        id: message._id,
+                        senderId: message.senderId,
+                        senderName: message.senderName,
+                        content: message.content,
+                        contentType: message.contentType,
+                        createdAt: message.createdAt,
+                        isMine: message.senderId == receiverId
+                    }));
                 }
             }
 
