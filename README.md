@@ -53,20 +53,26 @@ Replace the placeholders with your actual:
 - Gmail credentials
 - JWT secret key
 
-### 4. Run the project with Docker Compose:
-Use the provided docker-compose.yml file to spin up the services:
+### 4. Build and Run the Project with Docker Compose:
+Before starting the services, build the Docker images using the provided docker-compose.yml file:
 ```bash
-   docker-compose up
+   docker compose build
 ```
 
-### 5. Access the services:
+### 5. Run the project with Docker Compose:
+Use the provided docker-compose.yml file to spin up the services:
+```bash
+   docker compose up
+```
+
+### 6. Access the services:
    - API server: http://localhost:8080
    - WebSocket server: ws://localhost:3001
 
-### 6. Stopping the services:
+### 7. Stopping the services:
 To stop the services and remove the containers, use:
 ```bash
-   docker-compose down
+   docker compose down
 ```
 
 
