@@ -3,7 +3,6 @@ import {Chat, Message, RoomChat, User} from "../models/dbModels";
 import {v4 as uuidGenerate} from 'uuid';
 import {messageSchema} from "../models/messageSchema";
 import {pubClient} from "../redis";
-import {late} from "zod";
 
 interface MessageBody {
     conversationId: string,
@@ -72,7 +71,7 @@ export const getConversations = async (req: express.Request, res: express.Respon
                     lastMessage: chat.messages[0] ? {
                         id: chat.messages[0]._id,
                         senderId: chat.messages[0].senderId,
-                        senderName: chat.messages[0].senderName,
+                        senderName: chat.messages[0].senderId == email ? "You" : chat.messages[0].senderName,
                         content: chat.messages[0].content,
                         contentType: chat.messages[0].contentType,
                         createdAt: chat.messages[0].createdAt,
@@ -105,7 +104,7 @@ export const getConversations = async (req: express.Request, res: express.Respon
                     lastMessage: room.messages[0] ? {
                         id: room.messages[0]._id,
                         senderId: room.messages[0].senderId,
-                        senderName: room.messages[0].senderName,
+                        senderName: room.messages[0].senderId == email ? "You" : room.messages[0].senderName,
                         content: room.messages[0].content,
                         contentType: room.messages[0].contentType,
                         createdAt: room.messages[0].createdAt,
@@ -192,6 +191,7 @@ export const sendMessage = async (req: express.Request, res: express.Response) =
             content: dbMessage.content,
             contentType: dbMessage.contentType,
             createdAt: dbMessage.createdAt,
+            conversationId: message.conversationId,
             userIds
         };
         await pubClient.publish(channel, JSON.stringify(extendedMessageBody))
@@ -212,6 +212,10 @@ export const getChatAndRoomMessages = async (req: express.Request, res: express.
                 chatId: conversationId,
                 users: {$elemMatch: {$eq: email}}
             }).populate("messages");
+            if(!chats){
+                res.status(200).json({messages: []});
+                return;
+            }
             const messages = chats?.messages as unknown as Message[];
             const transformedMessages = messages.map((message) => {
                 return {
@@ -269,7 +273,7 @@ export const createRoomChat = async (req: express.Request, res: express.Response
         });
         user.roomIds.push(room._id);
         await user.save();
-        res.status(200).json({messages: "Room successfully created"});
+        res.status(200).json({message: "Room successfully created"});
     } catch (err) {
         res.status(500).json({error: "Something went wrong"});
     }
@@ -292,7 +296,7 @@ export const addUserToRoomChat = async (req: express.Request, res: express.Respo
         await roomChat.save();
         user.roomIds.push(roomChat._id);
         await user.save();
-        res.status(200).json({messages: "User added Successfully."});
+        res.status(200).json({message: "User added Successfully."});
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Something went wrong"});
